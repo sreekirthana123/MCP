@@ -32,17 +32,21 @@ DRAFTING RULES (HARD CONSTRAINTS - obey all of these):
    Just start with the substance.
 
 4. STRUCTURE
-   Order the reply exactly like this:
-   (a) one-line warm acknowledgment that references the specific message
-   (b) the response / substance
-   (c) ONE clear next step or question
-   No preamble. No sign-off explanation. Just the email body, ready to send.
+    Order the reply exactly like this:
+    (a) greeting line: "Hi [Name],"
+    (b) one-line warm acknowledgment that references the specific message
+    (c) the response / substance
+    (d) ONE clear next step or question
+    No sign-off explanation. Just the email body, ready to send.
 """
 
 # ---------------------------------------------------------------------------
 # Environment / API key handling
 # ---------------------------------------------------------------------------
 _HERE = Path(__file__).resolve().parent
+
+# Target the specific subdirectory where the .env file lives
+load_dotenv(dotenv_path=_HERE / "Gmail-MCP-Server" / ".env")
 load_dotenv(dotenv_path=_HERE / ".env")
 load_dotenv()
 
@@ -88,7 +92,7 @@ def _build_combined_prompts(thread: dict[str, Any]) -> tuple[str, str]:
     return system_prompt, user_prompt
 
 _FENCE_RE = re.compile(r"^```[a-zA-Z0-9]*\n|\n```$", re.MULTILINE)
-_SUBJECT_LINE_RE = re.compile(r"^\s*subject\s*:\s*.*$", re.IGNORECASE | re.MULTILINE)
+_SUBJECT_LINE_RE = re.compile(r"^subject\s*:\s*.*$", re.IGNORECASE)
 
 def _post_process(raw: str) -> str:
     """Clean up a model response into a send-ready draft.
@@ -112,30 +116,26 @@ def _post_process(raw: str) -> str:
 # Gemini client
 # ---------------------------------------------------------------------------
 def _build_model():
-    """Construct a configured Gemini GenerativeModel.
+    """Construct a configured Gemini client.
 
     Raises
     ------
     RuntimeError
-        If `google.generativeai` is not installed, or the API key is missing.
+        If `google-genai` is not installed, or the API key is missing.
     """
     try:
-        import google.generativeai as genai  # type: ignore
+        from google import genai
     except ImportError as e:
         raise RuntimeError(
-            "The 'google-generativeai' package is not installed. "
-            "Install it with: pip install google-generativeai"
+            "The 'google-genai' package is not installed. "
+            "Install it with: pip install google-genai"
         ) from e
 
     api_key = _get_api_key()
     if not api_key:
         raise RuntimeError(_missing_api_key_message())
 
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel(
-        model_name=MODEL_NAME,
-        system_instruction=None,  # we'll pass system content via the prompt
-    )
+    return genai.Client(api_key=api_key)
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -154,7 +154,9 @@ def draft_reply(thread: dict[str, Any]) -> str:
     str
         The draft email body, ready to send (no subject, no preamble).
     """
-    model = _build_model()
+    from google import genai
+    from google.genai import types
+
     system_prompt, user_prompt = _build_combined_prompts(thread)
 
     # Gemini's chat-style API: pass system as the first "user" turn with
@@ -166,15 +168,16 @@ def draft_reply(thread: dict[str, Any]) -> str:
         f"{user_prompt}"
     )
 
-    response = model.generate_content(
-        combined_user,
-        generation_config={
-            "temperature": 0.3,
-            "top_p": 0.95,
-            "max_output_tokens": 256,
-        },
+    client = _build_model()
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=combined_user,
+        config=types.GenerateContentConfig(
+            temperature=0.7,
+            top_p=0.9,
+            max_output_tokens=1024,
+        ),
     )
-
     return _post_process(response.text)
 
 def draft_reply_with_metadata(thread: dict[str, Any]) -> dict[str, Any]:
