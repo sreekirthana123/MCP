@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "context": "Replying to a peer who shared dataset preprocessing steps and asked about model selection for a classification task.",
+    "incoming_subject": "Re: Model Selection for Classification Pipeline",
+    "reply": "Hi Aditya,\n\nThanks for sharing the preprocessing breakdown — the handling of class imbalance looks solid.\n\nOne thing worth considering: given the dataset size and the interpretability requirement you mentioned, a tuned Random Forest might outperform a vanilla XGBoost here before we move to deep learning approaches. Happy to run a quick comparison if that helps.\n\nLet me know if you want to sync on this before the next review.\n\nBest,\nKirthana\nAI/ML Engineer | JBIET"
+  },
+  {
+    "id": 2,
+    "context": "Replying to a team lead who shared a project proposal and requested feedback on the technical feasibility.",
+    "incoming_subject": "Re: Project Proposal — Agentic Workflow System",
+    "reply": "Hi Meera,\n\nThis is a strong proposal. The agentic loop design makes sense, and the scoping is realistic for the timeline.\n\nA couple of thoughts:\n- The tool-calling layer might need a fallback for API rate limits — worth building that in early.\n- For the memory component, a lightweight vector store like ChromaDB could work well without overcomplicating the stack.\n\nOverall, solid direction. Let me know when you're ready to move to the build phase.\n\nBest,\nKirthana\nAI/ML Engineer | JBIET"
+  },
+  {
+    "id": 3,
+    "context": "Replying to a collaborator who shared user feedback from a deployed ML project and asked for next steps.",
+    "incoming_subject": "Re: User Feedback — FitTrack AI Beta",
+    "reply": "Hi Ravi,\n\nThanks for compiling this — useful signal across the board.\n\nThree things stand out:\n1. The 7-day data gate is flagged as confusing by new users — we should add a clearer onboarding prompt explaining why it exists.\n2. Prediction accuracy feedback is mostly positive, which validates the model approach.\n3. The meal logging drop-off is worth investigating — might be a UX friction issue more than a feature gap.\n\nI'll prioritize the onboarding fix this week. Let's regroup once that's shipped.\n\nBest,\nKirthana\nAI/ML Engineer | JBIET"
+  }
+]
